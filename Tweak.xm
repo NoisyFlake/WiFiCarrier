@@ -1,15 +1,34 @@
 #import "Tweak.h"
 
-%hook SBTelephonyManager
--(void)_setOperatorName:(id)arg1 inSubscriptionContext:(id)arg2 {
-  SBWiFiManager *manager = [%c(SBWiFiManager) sharedInstance];
-  NSString *networkName = [manager currentNetworkName];
+static NSString *originalName = nil;
+static id subscriptionContext = nil;
 
-  if ([networkName length] > 0) {
-    %orig(networkName, arg2);
-  } else {
-    %orig;
-  }
+%hook SBTelephonyManager
+
+-(void)operatorNameChanged:(id)arg1 name:(id)arg2 {
+	subscriptionContext = arg1;
+	originalName = arg2;
+
+	SBWiFiManager *manager = [%c(SBWiFiManager) sharedInstance];
+	NSString *networkName = [manager currentNetworkName];
+
+	if ([networkName length] > 0) {
+		%orig(arg1, networkName);
+	} else {
+		%orig;
+	}
+
 }
 %end
 
+%hook SBWiFiManager
+-(void)_updateCurrentNetwork {
+	%orig;
+
+	if (subscriptionContext != nil && originalName != nil) {
+		SBTelephonyManager *manager = [%c(SBTelephonyManager) sharedTelephonyManager];
+		[manager operatorNameChanged:subscriptionContext name:originalName];
+	}
+
+}
+%end
