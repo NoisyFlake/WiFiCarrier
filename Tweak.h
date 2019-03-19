@@ -5,5 +5,7 @@
 
 @interface SBTelephonyManager : NSObject
 +(id)sharedTelephonyManager;
--(void)operatorNameChanged:(id)arg1 name:(id)arg2 ;
+-(void)operatorNameChanged:(id)arg1 name:(id)arg2;
 @end
+
+static void forceUpdate();
