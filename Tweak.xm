@@ -2,15 +2,20 @@
 
 static BOOL hasFullyLoaded = NO;
 
-static NSString *originalName = nil;
+// Original values from SBTelephonyManager
+static NSString *originalName = @"";
 static id subscriptionContext = nil;
+
+// User settings
+static BOOL enabled;
+static NSString *customCarrier;
 
 %hook SBTelephonyManager
 -(void)operatorNameChanged:(id)arg1 name:(id)arg2 {
 	subscriptionContext = arg1;
 	originalName = arg2;
 
-	if (!hasFullyLoaded) {
+	if (!enabled || !hasFullyLoaded) {
 		%orig;
 		return;
 	}
@@ -20,6 +25,8 @@ static id subscriptionContext = nil;
 
 	if ([networkName length] > 0) {
 		%orig(arg1, networkName);
+	} else if ([customCarrier length] > 0) {
+		%orig(arg1, customCarrier);
 	} else {
 		%orig;
 	}
@@ -30,7 +37,10 @@ static id subscriptionContext = nil;
 %hook SBWiFiManager
 -(void)_updateCurrentNetwork {
 	%orig;
-	forceUpdate();
+
+	if (enabled) {
+		forceUpdate();
+	}
 }
 %end
 
@@ -46,8 +56,41 @@ static id subscriptionContext = nil;
 %end
 
 static void forceUpdate() {
-	if (!hasFullyLoaded || subscriptionContext == nil || originalName == nil) return;
+	if (!hasFullyLoaded || subscriptionContext == nil) return;
 
 	SBTelephonyManager *manager = [%c(SBTelephonyManager) sharedTelephonyManager];
 	[manager operatorNameChanged:subscriptionContext name:originalName];
+}
+
+// ===== PREFERENCE HANDLING ===== //
+
+static void loadPrefs() {
+  NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.noisyflake.wificarrier.plist"];
+
+  if (prefs) {
+    enabled = ( [prefs objectForKey:@"enabled"] ? [[prefs objectForKey:@"enabled"] boolValue] : YES );
+    customCarrier = ( [prefs objectForKey:@"customCarrier"] ? [[prefs objectForKey:@"customCarrier"] stringValue] : nil );
+  }
+
+}
+
+static void refreshPrefs() {
+  loadPrefs();
+  forceUpdate();
+}
+
+static void initPrefs() {
+  // Copy the default preferences file when the actual preference file doesn't exist
+  NSString *path = @"/User/Library/Preferences/com.noisyflake.wificarrier.plist";
+  NSString *pathDefault = @"/Library/PreferenceBundles/WiFiCarrier.bundle/defaults.plist";
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  if (![fileManager fileExistsAtPath:path]) {
+    [fileManager copyItemAtPath:pathDefault toPath:path error:nil];
+  }
+}
+
+%ctor {
+  CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)refreshPrefs, CFSTR("com.noisyflake.wificarrier/prefsupdated"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+  initPrefs();
+  loadPrefs();
 }
