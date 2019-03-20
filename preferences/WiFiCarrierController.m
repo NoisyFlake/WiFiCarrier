@@ -49,31 +49,37 @@
 {
 	self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"Banner" specifier:specifier];
 	if (self) {
-		CGFloat width = 320.0f;
-		CGRect frame = CGRectMake(0.0f, -25.0f, width, 60.0f);
+		CGFloat width = 320;
+		CGFloat height = 70;
 
-		tweakName = [[UILabel alloc] initWithFrame:frame];
+		CGRect backgroundFrame = CGRectMake(0, -35, width, height);
+		background = [[UILabel alloc] initWithFrame:backgroundFrame];
+		[background layoutIfNeeded];
+		background.backgroundColor = [UIColor colorWithRed:0.30 green:0.85 blue:0.39 alpha:1.0];
+		background.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+
+		CGRect tweakNameFrame = CGRectMake(0, -40, width, height);
+		tweakName = [[UILabel alloc] initWithFrame:tweakNameFrame];
 		[tweakName layoutIfNeeded];
 		tweakName.numberOfLines = 1;
 		tweakName.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
 		tweakName.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:40.0f];
-		tweakName.textColor = [UIColor colorWithRed:0.30 green:0.85 blue:0.39 alpha:1.0];
+		tweakName.textColor = [UIColor whiteColor];
 		tweakName.text = @"WiFiCarrier";
-		tweakName.backgroundColor = [UIColor clearColor];
+		// tweakName.backgroundColor = [UIColor colorWithRed:0.30 green:0.85 blue:0.39 alpha:1.0];
 		tweakName.textAlignment = NSTextAlignmentCenter;
 
-		CGRect frame2 = CGRectMake(0.0f, 10.0f, width, 60.0f);
-		version = [[UILabel alloc] initWithFrame:frame2];
+		CGRect versionFrame = CGRectMake(0, -5, width, height);
+		version = [[UILabel alloc] initWithFrame:versionFrame];
 		version.numberOfLines = 1;
 		version.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
 		version.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:15.0f];
-		version.textColor = [UIColor colorWithRed:0.3f green:0.3f blue:0.3f alpha:1.0f];
-		version.shadowColor = [UIColor whiteColor];
-		version.shadowOffset = CGSizeMake(0.0f, 1.0f);
+		version.textColor = [UIColor whiteColor];
 		version.text = @"Version 1.1.0";
 		version.backgroundColor = [UIColor clearColor];
 		version.textAlignment = NSTextAlignmentCenter;
 
+		[self addSubview:background];
 		[self addSubview:tweakName];
 		[self addSubview:version];
 	}

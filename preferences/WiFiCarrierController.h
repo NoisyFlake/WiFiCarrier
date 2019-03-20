@@ -5,6 +5,7 @@
 @end
 
 @interface WiFiCarrierLogo : PSTableCell {
+	UILabel *background;
 	UILabel *tweakName;
 	UILabel *version;
 }
